@@ -1,16 +1,16 @@
 {
   "name": "@volare-consulting/odata-parser",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "OData Parser",
   "main": "lib/parser.js",
   "repository": {
     "type": "git",
-    "url": "git://github.com/slongietti/odata-parser.git"
+    "url": "git://github.com/volare-consulting-software/odata-parser.git"
   },
   "bugs": {
-    "url": "https://github.com/slongietti/odata-parser/issues"
+    "url": "https://github.com/volare-consulting-software/odata-parser/issues"
   },
-  "homepage": "https://github.com/slongietti/odata-parser#readme",
+  "homepage": "https://github.com/volare-consulting-software/odata-parser#readme",
   "author": "Volare Consulting, LLC",
   "license": "MIT",
   "scripts": {
