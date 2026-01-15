@@ -31,6 +31,32 @@ export namespace Utils {
 
         return i >= (min || 0) && i <= max ? index + i : 0;
     }
+
+
+    export function parseTimeUnit(value: Utils.SourceArray, index: number): string | undefined {
+        const timeUnits = ["day", "days", "hour", "hours", "minute", "minutes", "second", "seconds"];
+
+        for (const unit of timeUnits) {
+            if (Utils.equals(value, index, unit)) {
+                return unit;
+            }
+        }
+        return undefined;
+    }
+
+    export function isNumericType(type: string): boolean {
+        const numericTypes : string[] = [
+            'Edm.Byte',
+            'Edm.SByte',
+            'Edm.Int16',
+            'Edm.Int32',
+            'Edm.Int64',
+            'Edm.Decimal',
+            'Edm.Double',
+            'Edm.Single'
+        ];
+        return numericTypes.includes(type);
+    }
 }
 
 export default Utils;

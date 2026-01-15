@@ -37,7 +37,7 @@
     "typedoc": "^0.11.1",
     "typedoc-default-themes": "^0.5.0",
     "typedoc-plugin-external-module-name": "^1.1.1",
-    "typescript": "^2.9.1"
+    "typescript": "^5.9.3"
   },
   "typings": "lib/parser.d.ts"
 }
