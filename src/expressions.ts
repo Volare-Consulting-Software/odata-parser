@@ -325,7 +325,6 @@ export namespace Expressions {
     export function nowMethodCallExpr(value: Utils.SourceArray, index: number): NullableToken {
         const token = methodCallExprFactory(value, index, "now", 0);
         if (!token) return;
-        // Check for addition/subtraction with time unit (e.g., now() - 1 day or now() + 1 day)
         let rws = Lexer.RWS(value, token.next);
         if (rws > token.next) {
             const operator = value[rws];
@@ -335,16 +334,15 @@ export namespace Expressions {
                 const subRws = Lexer.RWS(value, rws + 1);
                 if (subRws > rws + 1) {
                     const numberToken = PrimitiveLiteral.primitiveLiteral(value, subRws);
-                    if (numberToken && Utils.isNumericType(numberToken.type)) {
-                        // Found a number after the operator
+                    if (numberToken && Utils.isNumericType(numberToken.value)) {
                         const unitRws = Lexer.RWS(value, numberToken.next);
                         if (unitRws > numberToken.next) {
                             const unit = Utils.parseTimeUnit(value, unitRws);
                             if (unit) {
                                 token.value = {
-                                    method: "now",
+                                    method: token.value.method,
                                     offset: {
-                                        value: isSubtraction ? -numberToken.raw : numberToken.raw,
+                                        value: isSubtraction ? -Number(numberToken.raw) : Number(numberToken.raw),
                                         unit: unit
                                     }
                                 };

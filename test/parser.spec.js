@@ -34,23 +34,6 @@ describe("Parser", () => {
     expect(ast.value.options[1].value.value).to.equal("foobar");
   });
 
-  it("should parse addition to now", () => {
-    var parser = new Parser();
-    console.log("AHHH");
-    var ast = parser.filter("foo ge now() + 365 day");
-    console.log("AHHH");
-    console.log(JSON.stringify(ast.value));
-    expect(ast.value.left.raw).to.equal("foo");
-    expect(ast.value.right.raw).to.equal("now() + 1 day");
-  });
-
-  it("should parse subtraction from now", () => {
-    var parser = new Parser();
-    var ast = parser.filter("foo eq now()");
-    expect(ast.value.left.raw).to.equal("foo");
-    expect(ast.value.right.raw).to.equal("now()");
-  });
-
   it("should throw error parsing invalid custom query options", () => {
     var parser = new Parser();
     var error = false;

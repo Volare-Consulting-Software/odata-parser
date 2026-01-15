@@ -274,6 +274,168 @@
     }
   },
   {
+    "-Name": "Date Now() Modification: Add day",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 1 day",
+    "result": {
+      "position": 0,
+      "next": 13,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 1,
+          "unit": "day"
+        }
+      },
+      "raw": "now() + 1 day"
+    }
+  },
+  {
+    "-Name": "Date Now() Modification: Add days",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 2 day",
+    "result": {
+      "position": 0,
+      "next": 13,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 2,
+          "unit": "day"
+        }
+      },
+      "raw": "now() + 2 day"
+    }
+  },
+  {
+    "-Name": "Date Now() Modification: Add hour",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 1 hour",
+    "result": {
+      "position": 0,
+      "next": 14,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 1,
+          "unit": "hour"
+        }
+      },
+      "raw": "now() + 1 hour"
+    }
+  },
+  {
+    "-Name": "Date Now() Modification: Add hours",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 2 hour",
+    "result": {
+      "position": 0,
+      "next": 14,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 2,
+          "unit": "hour"
+        }
+      },
+      "raw": "now() + 2 hour"
+    }
+  },
+  {
+    "-Name": "Date Now() Modification: Add minute",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 1 minute",
+    "result": {
+      "position": 0,
+      "next": 16,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 1,
+          "unit": "minute"
+        }
+      },
+      "raw": "now() + 1 minute"
+    }
+  },
+  {
+    "-Name": "Date Now() Modification: Add minutes",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 2 minute",
+    "result": {
+      "position": 0,
+      "next": 16,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 2,
+          "unit": "minute"
+        }
+      },
+      "raw": "now() + 2 minute"
+    }
+  },
+  {
+    "-Name": "Date Now() Modification: Add second",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 1 second",
+    "result": {
+      "position": 0,
+      "next": 16,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 1,
+          "unit": "second"
+        }
+      },
+      "raw": "now() + 1 second"
+    }
+  },
+  {
+    "-Name": "Date Now() Modification: Add seconds",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() + 2 seconds",
+    "result": {
+      "position": 0,
+      "next": 16,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": 2,
+          "unit": "second"
+        }
+      },
+      "raw": "now() + 2 second"
+    }
+  },
+    {
+    "-Name": "Date Now() Modification: Subtract minute",
+    "-Rule": "nowMethodCallExpr",
+    "Input": "now() - 1 minute",
+    "result": {
+      "position": 0,
+      "next": 16,
+      "type": "MethodCallExpression",
+      "value": {
+        "method": "now",
+        "offset": {
+          "value": -1,
+          "unit": "minute"
+        }
+      },
+      "raw": "now() - 1 minute"
+    }
+  },
+  {
     "-Name": "Decimal",
     "-Rule": "decimalValue",
     "Input": "3.14",

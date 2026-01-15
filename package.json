@@ -1,6 +1,6 @@
 {
   "name": "@volare-consulting/odata-parser",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "OData Parser",
   "main": "lib/parser.js",
   "repository": {

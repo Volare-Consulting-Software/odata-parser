@@ -55,9 +55,7 @@ export namespace Utils {
             'Edm.Double',
             'Edm.Single'
         ];
-        //return numericTypes.includes(type);
-
-        return false;
+        return numericTypes.includes(type);
     }
 }
 
