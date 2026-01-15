@@ -1,9 +1,14 @@
 import Utils from "./utils";
 import Lexer from "./lexer";
 import PrimitiveLiteral from "./primitiveLiteral";
+import { NullableToken } from "./types/nullableToken";
+import { EntitySet } from "./types/entitySet";
+import { Schema } from "./types/schema";
+import { BaseType } from "./types/baseType";
+import { NamespaceType } from "./types/namespaceType";
 
 export namespace NameOrIdentifier {
-    export function enumeration(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function enumeration(value: Utils.SourceArray, index: number): NullableToken {
         let type = qualifiedEnumTypeName(value, index);
         if (!type) return;
         let start = index;
@@ -26,7 +31,7 @@ export namespace NameOrIdentifier {
             value: enumVal
         }, Lexer.TokenType.Enum);
     }
-    export function enumValue(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function enumValue(value: Utils.SourceArray, index: number): NullableToken {
         let val = NameOrIdentifier.singleEnumValue(value, index);
         if (!val) return;
         let start = index;
@@ -44,25 +49,25 @@ export namespace NameOrIdentifier {
 
         return Lexer.tokenize(value, start, index, { values: arr }, Lexer.TokenType.EnumValue);
     }
-    export function singleEnumValue(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function singleEnumValue(value: Utils.SourceArray, index: number): NullableToken {
         return NameOrIdentifier.enumerationMember(value, index) ||
             NameOrIdentifier.enumMemberValue(value, index);
     }
-    export function enumMemberValue(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function enumMemberValue(value: Utils.SourceArray, index: number): NullableToken {
         let token = PrimitiveLiteral.int64Value(value, index);
         if (token) {
             token.type = Lexer.TokenType.EnumMemberValue;
             return token;
         }
     }
-    export function singleQualifiedTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function singleQualifiedTypeName(value: Utils.SourceArray, index: number): NullableToken {
         return NameOrIdentifier.qualifiedEntityTypeName(value, index) ||
             NameOrIdentifier.qualifiedComplexTypeName(value, index) ||
             NameOrIdentifier.qualifiedTypeDefinitionName(value, index) ||
             NameOrIdentifier.qualifiedEnumTypeName(value, index) ||
             NameOrIdentifier.primitiveTypeName(value, index);
     }
-    export function qualifiedTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function qualifiedTypeName(value: Utils.SourceArray, index: number): NullableToken {
         if (Utils.equals(value, index, "Collection")) {
             let start = index;
             index += 10;
@@ -85,14 +90,14 @@ export namespace NameOrIdentifier {
             token.type = Lexer.TokenType.Collection;
         } else return NameOrIdentifier.singleQualifiedTypeName(value, index);
     }
-    export function qualifiedEntityTypeName(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function qualifiedEntityTypeName(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         let namespaceNext = NameOrIdentifier.namespace(value, index);
 
         if (namespaceNext === index || value[namespaceNext] !== 0x2e) return;
         let schema;
         if (typeof metadataContext === "object") {
-            schema = NameOrIdentifier.getMetadataRoot(metadataContext).schemas.filter(it => it.namespace === Utils.stringify(value, start, namespaceNext))[0];
+            schema = NameOrIdentifier.getMetadataRoot(metadataContext).schemas.filter((it: NamespaceType) => it.namespace === Utils.stringify(value, start, namespaceNext))[0];
         }
         let name = NameOrIdentifier.entityTypeName(value, namespaceNext + 1, schema);
         if (!name) return;
@@ -100,13 +105,13 @@ export namespace NameOrIdentifier {
 
         return Lexer.tokenize(value, start, name.next, name, Lexer.TokenType.QualifiedEntityTypeName);
     }
-    export function qualifiedComplexTypeName(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function qualifiedComplexTypeName(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         let namespaceNext = NameOrIdentifier.namespace(value, index);
         if (namespaceNext === index || value[namespaceNext] !== 0x2e) return;
         let schema;
         if (typeof metadataContext === "object") {
-            schema = NameOrIdentifier.getMetadataRoot(metadataContext).schemas.filter(it => it.namespace === Utils.stringify(value, start, namespaceNext))[0];
+            schema = NameOrIdentifier.getMetadataRoot(metadataContext).schemas.filter((it: NamespaceType) => it.namespace === Utils.stringify(value, start, namespaceNext))[0];
         }
         let name = NameOrIdentifier.complexTypeName(value, namespaceNext + 1, schema);
         if (!name) return;
@@ -114,23 +119,23 @@ export namespace NameOrIdentifier {
 
         return Lexer.tokenize(value, start, name.next, name, Lexer.TokenType.QualifiedComplexTypeName);
     }
-    export function qualifiedTypeDefinitionName(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function qualifiedTypeDefinitionName(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         let namespaceNext = NameOrIdentifier.namespace(value, index);
         if (namespaceNext === index || value[namespaceNext] !== 0x2e) return;
         let nameNext = NameOrIdentifier.typeDefinitionName(value, namespaceNext + 1);
         if (nameNext && nameNext.next === namespaceNext + 1) return;
 
-        return Lexer.tokenize(value, start, nameNext.next, "TypeDefinitionName", Lexer.TokenType.Identifier);
+        return Lexer.tokenize(value, start, nameNext?.next ?? 0, "TypeDefinitionName", Lexer.TokenType.Identifier);
     }
-    export function qualifiedEnumTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function qualifiedEnumTypeName(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         let namespaceNext = NameOrIdentifier.namespace(value, index);
         if (namespaceNext === index || value[namespaceNext] !== 0x2e) return;
         let nameNext = NameOrIdentifier.enumerationTypeName(value, namespaceNext + 1);
         if (nameNext && nameNext.next === namespaceNext + 1) return;
 
-        return Lexer.tokenize(value, start, nameNext.next, "EnumTypeName", Lexer.TokenType.Identifier);
+        return Lexer.tokenize(value, start, nameNext?.next ?? 0, "EnumTypeName", Lexer.TokenType.Identifier);
     }
     export function namespace(value: Utils.SourceArray, index: number): number {
         let part = NameOrIdentifier.namespacePart(value, index);
@@ -145,7 +150,7 @@ export namespace NameOrIdentifier {
 
         return index - 1;
     }
-    export function odataIdentifier(value: Utils.SourceArray, index: number, tokenType?: Lexer.TokenType): Lexer.Token {
+    export function odataIdentifier(value: Utils.SourceArray, index: number, tokenType?: Lexer.TokenType): NullableToken {
         let start = index;
         if (Lexer.identifierLeadingCharacter(value[index])) {
             index++;
@@ -156,14 +161,14 @@ export namespace NameOrIdentifier {
 
         if (index > start) return Lexer.tokenize(value, start, index, { name: Utils.stringify(value, start, index) }, tokenType || Lexer.TokenType.ODataIdentifier);
     }
-    export function namespacePart(value: Utils.SourceArray, index: number): Lexer.Token { return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.NamespacePart); }
-    export function entitySetName(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function namespacePart(value: Utils.SourceArray, index: number): NullableToken {return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.NamespacePart); }
+    export function entitySetName(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntitySetName);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let entitySet;
-            metadataContext.dataServices.schemas.forEach(schema => schema.entityContainer.forEach(container => container.entitySets.filter((set) => {
+            let entitySet = {} as EntitySet;
+            metadataContext.dataServices.schemas.forEach((schema: Schema) => schema.entityContainer.forEach(container => container.entitySets.filter((set) => {
                 let eq = set.name === token.raw;
                 if (eq) entitySet = set;
                 return eq;
@@ -171,7 +176,7 @@ export namespace NameOrIdentifier {
             if (!entitySet) return;
 
             let entityType;
-            metadataContext.dataServices.schemas.forEach(schema => entitySet.entityType.indexOf(schema.namespace + ".") === 0 && schema.entityTypes.filter((type) => {
+            metadataContext.dataServices.schemas.forEach((schema: Schema) => entitySet.entityType.indexOf(schema.namespace + ".") === 0 && schema.entityTypes.filter((type) => {
                 let eq = type.name === entitySet.entityType.replace(schema.namespace + ".", "");
                 if (eq) entityType = type;
                 return eq;
@@ -183,36 +188,36 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function singletonEntity(value: Utils.SourceArray, index: number): Lexer.Token { return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.SingletonEntity); }
-    export function entityTypeName(value: Utils.SourceArray, index: number, schema?: any): Lexer.Token {
+    export function singletonEntity(value: Utils.SourceArray, index: number): NullableToken {return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.SingletonEntity); }
+    export function entityTypeName(value: Utils.SourceArray, index: number, schema?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityTypeName);
         if (!token) return;
 
         if (typeof schema === "object") {
-            let type = schema.entityTypes.filter(it => it.name === token.raw)[0];
+            let type = schema.entityTypes.filter((it: BaseType) => it.name === token.raw)[0];
             if (!type) return;
             token.metadata = type;
         }
 
         return token;
     }
-    export function complexTypeName(value: Utils.SourceArray, index: number, schema?: any): Lexer.Token {
+    export function complexTypeName(value: Utils.SourceArray, index: number, schema?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexTypeName);
         if (!token) return;
 
         if (typeof schema === "object") {
-            let type = schema.complexTypes.filter(it => it.name === token.raw)[0];
+            let type = schema.complexTypes.filter((it: BaseType) => it.name === token.raw)[0];
             if (!type) return;
             token.metadata = type;
         }
 
         return token;
     }
-    export function typeDefinitionName(value: Utils.SourceArray, index: number): Lexer.Token { return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.TypeDefinitionName); }
-    export function enumerationTypeName(value: Utils.SourceArray, index: number): Lexer.Token { return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EnumerationTypeName); }
-    export function enumerationMember(value: Utils.SourceArray, index: number): Lexer.Token { return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EnumerationMember); }
-    export function termName(value: Utils.SourceArray, index: number): Lexer.Token { return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.TermName); }
-    export function primitiveTypeName(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function typeDefinitionName(value: Utils.SourceArray, index: number): NullableToken {return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.TypeDefinitionName); }
+    export function enumerationTypeName(value: Utils.SourceArray, index: number): NullableToken {return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EnumerationTypeName); }
+    export function enumerationMember(value: Utils.SourceArray, index: number): NullableToken {return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EnumerationMember); }
+    export function termName(value: Utils.SourceArray, index: number): NullableToken {return NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.TermName); }
+    export function primitiveTypeName(value: Utils.SourceArray, index: number): NullableToken {
         if (!Utils.equals(value, index, "Edm.")) return;
         let start = index;
         index += 4;
@@ -260,13 +265,13 @@ export namespace NameOrIdentifier {
     export function isPrimitiveTypeName(type: string, metadataContext?: any): boolean {
         let root = NameOrIdentifier.getMetadataRoot(metadataContext);
         let schemas = root.schemas || (root.dataServices && root.dataServices.schemas) || [];
-        let schema = schemas.filter(function (it) { return type.indexOf(it.namespace + ".") === 0; })[0];
+        let schema = schemas.filter(function (it: NamespaceType) { return type.indexOf(it.namespace + ".") === 0; })[0];
         if (schema) {
-            return ((schema.enumTypes && schema.enumTypes.filter(function (it) { return it.name === type.split(".").pop(); })[0]) ||
-                (schema.typeDefinitions && schema.typeDefinitions.filter(function (it) { return it.name === type.split(".").pop(); })[0])) &&
+            return ((schema.enumTypes && schema.enumTypes.filter(function (it: BaseType) { return it.name === type.split(".").pop(); })[0]) ||
+                (schema.typeDefinitions && schema.typeDefinitions.filter(function (it: BaseType) { return it.name === type.split(".").pop(); })[0])) &&
                 !(
-                    (schema.entityTypes && schema.entityTypes.filter(function (it) { return it.name === type.split(".").pop(); })[0]) ||
-                    (schema.complexTypes && schema.complexTypes.filter(function (it) { return it.name === type.split(".").pop(); })[0])
+                    (schema.entityTypes && schema.entityTypes.filter(function (it: BaseType) { return it.name === type.split(".").pop(); })[0]) ||
+                    (schema.complexTypes && schema.complexTypes.filter(function (it: BaseType) { return it.name === type.split(".").pop(); })[0])
                 );
         }
         return primitiveTypes.indexOf(type) >= 0;
@@ -278,7 +283,7 @@ export namespace NameOrIdentifier {
         }
         return root.dataServices || root;
     }
-    export function primitiveProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function primitiveProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveProperty);
         if (!token) return;
 
@@ -289,7 +294,7 @@ export namespace NameOrIdentifier {
                     if (prop.type.indexOf("Collection") === 0 || !NameOrIdentifier.isPrimitiveTypeName(prop.type, metadataContext)) return;
                     token.metadata = prop;
 
-                    if (metadataContext.key && metadataContext.key.propertyRefs.filter(it => it.name === prop.name).length > 0) {
+                    if (metadataContext.key && metadataContext.key.propertyRefs.filter((it: BaseType) => it.name === prop.name).length > 0) {
                         token.type = Lexer.TokenType.PrimitiveKeyProperty;
                     }
 
@@ -302,15 +307,15 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function primitiveKeyProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function primitiveKeyProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.primitiveProperty(value, index, metadataContext);
         if (token && token.type === Lexer.TokenType.PrimitiveKeyProperty) return token;
     }
-    export function primitiveNonKeyProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function primitiveNonKeyProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.primitiveProperty(value, index, metadataContext);
         if (token && token.type === Lexer.TokenType.PrimitiveProperty) return token;
     }
-    export function primitiveColProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function primitiveColProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveCollectionProperty);
         if (!token) return;
 
@@ -321,7 +326,7 @@ export namespace NameOrIdentifier {
                     if (prop.type.indexOf("Collection") === -1 || !NameOrIdentifier.isPrimitiveTypeName(prop.type.slice(11, -1), metadataContext)) return;
                     token.metadata = prop;
 
-                    if (metadataContext.key.propertyRefs.filter(it => it.name === prop.name).length > 0) {
+                    if (metadataContext.key.propertyRefs.filter((it: BaseType) => it.name === prop.name).length > 0) {
                         token.type = Lexer.TokenType.PrimitiveKeyProperty;
                     }
 
@@ -334,7 +339,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function complexProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function complexProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexProperty);
         if (!token) return;
 
@@ -344,10 +349,10 @@ export namespace NameOrIdentifier {
                 if (prop.name === token.raw) {
                     if (prop.type.indexOf("Collection") === 0 || NameOrIdentifier.isPrimitiveTypeName(prop.type, metadataContext)) return;
                     let root = NameOrIdentifier.getMetadataRoot(metadataContext);
-                    let schema = root.schemas.filter(it => prop.type.indexOf(it.namespace + ".") === 0)[0];
+                    let schema = root.schemas.filter((it: NamespaceType)  => prop.type.indexOf(it.namespace + ".") === 0)[0];
                     if (!schema) return;
 
-                    let complexType = schema.complexTypes.filter(it => it.name === prop.type.split(".").pop())[0];
+                    let complexType = schema.complexTypes.filter((it: BaseType)  => it.name === prop.type.split(".").pop())[0];
                     if (!complexType) return;
 
                     token.metadata = complexType;
@@ -360,7 +365,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function complexColProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function complexColProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexCollectionProperty);
         if (!token) return;
 
@@ -370,10 +375,10 @@ export namespace NameOrIdentifier {
                 if (prop.name === token.raw) {
                     if (prop.type.indexOf("Collection") === -1 || NameOrIdentifier.isPrimitiveTypeName(prop.type.slice(11, -1), metadataContext)) return;
                     let root = NameOrIdentifier.getMetadataRoot(metadataContext);
-                    let schema = root.schemas.filter(it => prop.type.slice(11, -1).indexOf(it.namespace + ".") === 0)[0];
+                    let schema = root.schemas.filter((it: NamespaceType)  => prop.type.slice(11, -1).indexOf(it.namespace + ".") === 0)[0];
                     if (!schema) return;
 
-                    let complexType = schema.complexTypes.filter(it => it.name === prop.type.slice(11, -1).split(".").pop())[0];
+                    let complexType = schema.complexTypes.filter((it: BaseType)  => it.name === prop.type.slice(11, -1).split(".").pop())[0];
                     if (!complexType) return;
 
                     token.metadata = complexType;
@@ -386,7 +391,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function streamProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function streamProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.StreamProperty);
         if (!token) return;
 
@@ -406,11 +411,11 @@ export namespace NameOrIdentifier {
         return token;
     }
 
-    export function navigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function navigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         return NameOrIdentifier.entityNavigationProperty(value, index, metadataContext) ||
             NameOrIdentifier.entityColNavigationProperty(value, index, metadataContext);
     }
-    export function entityNavigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function entityNavigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityNavigationProperty);
         if (!token) return;
 
@@ -419,10 +424,10 @@ export namespace NameOrIdentifier {
                 let prop = metadataContext.navigationProperties[i];
                 if (prop.name === token.raw && prop.type.indexOf("Collection") === -1 && !NameOrIdentifier.isPrimitiveTypeName(prop.type.slice(11, -1), metadataContext)) {
                     let root = NameOrIdentifier.getMetadataRoot(metadataContext);
-                    let schema = root.schemas.filter(it => prop.type.indexOf(it.namespace + ".") === 0)[0];
+                    let schema = root.schemas.filter((it: NamespaceType)  => prop.type.indexOf(it.namespace + ".") === 0)[0];
                     if (!schema) return;
 
-                    let entityType = schema.entityTypes.filter(it => it.name === prop.type.split(".").pop())[0];
+                    let entityType = schema.entityTypes.filter((it: BaseType)  => it.name === prop.type.split(".").pop())[0];
                     if (!entityType) return;
 
                     token.metadata = entityType;
@@ -433,7 +438,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function entityColNavigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function entityColNavigationProperty(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityCollectionNavigationProperty);
         if (!token) return;
 
@@ -442,10 +447,10 @@ export namespace NameOrIdentifier {
                 let prop = metadataContext.navigationProperties[i];
                 if (prop.name === token.raw && prop.type.indexOf("Collection") === 0 && !NameOrIdentifier.isPrimitiveTypeName(prop.type.slice(11, -1), metadataContext)) {
                     let root = NameOrIdentifier.getMetadataRoot(metadataContext);
-                    let schema = root.schemas.filter(it => prop.type.slice(11, -1).indexOf(it.namespace + ".") === 0)[0];
+                    let schema = root.schemas.filter((it: NamespaceType)  => prop.type.slice(11, -1).indexOf(it.namespace + ".") === 0)[0];
                     if (!schema) return;
 
-                    let entityType = schema.entityTypes.filter(it => it.name === prop.type.slice(11, -1).split(".").pop())[0];
+                    let entityType = schema.entityTypes.filter((it: BaseType)  => it.name === prop.type.slice(11, -1).split(".").pop())[0];
                     if (!entityType) return;
 
                     token.metadata = entityType;
@@ -457,18 +462,18 @@ export namespace NameOrIdentifier {
         return token;
     }
 
-    export function action(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+    export function action(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.Action);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let type = NameOrIdentifier.getOperationType("action", metadataContext, token, isCollection, false, false, "entityTypes");
+            let type = NameOrIdentifier.getOperationType("action", metadataContext, token, isCollection ?? false, false, false, "entityTypes");
             if (!type) return;
         }
 
         return token;
     }
-    export function actionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function actionImport(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ActionImport);
         if (!token) return;
 
@@ -480,7 +485,7 @@ export namespace NameOrIdentifier {
         return token;
     }
 
-    export function odataFunction(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function odataFunction(value: Utils.SourceArray, index: number): NullableToken {
         return NameOrIdentifier.entityFunction(value, index) ||
             NameOrIdentifier.entityColFunction(value, index) ||
             NameOrIdentifier.complexFunction(value, index) ||
@@ -526,8 +531,8 @@ export namespace NameOrIdentifier {
         for (let i = 0; i < root.schemas.length; i++) {
             let schema = root.schemas[i];
             if (elementType.indexOf(schema.namespace + ".") === 0) {
-                for (let j = 0; j < schema[types].length; j++) {
-                    let it = schema[types][j];
+                for (let j = 0; j < schema[types ?? 0].length; j++) {
+                    let it = schema[types ?? 0][j];
                     if (schema.namespace + "." + it.name === elementType) {
                         type = it;
                         break;
@@ -539,72 +544,72 @@ export namespace NameOrIdentifier {
 
         return type;
     }
-    export function entityFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+    export function entityFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityFunction);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection, false, false, "entityTypes");
+            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection ?? false, false, false, "entityTypes");
             if (!type) return;
             token.metadata = type;
         }
 
         return token;
     }
-    export function entityColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+    export function entityColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityCollectionFunction);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection, true, false, "entityTypes");
+            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection ?? false, true, false, "entityTypes");
             if (!type) return;
             token.metadata = type;
         }
 
         return token;
     }
-    export function complexFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+    export function complexFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexFunction);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection, false, false, "complexTypes");
+            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection ?? false, false, false, "complexTypes");
             if (!type) return;
             token.metadata = type;
         }
 
         return token;
     }
-    export function complexColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+    export function complexColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexCollectionFunction);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection, true, false, "complexTypes");
+            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection ?? false, true, false, "complexTypes");
             if (!type) return;
             token.metadata = type;
         }
 
         return token;
     }
-    export function primitiveFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+    export function primitiveFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveFunction);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection, false, true);
+            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection ?? false, false, true);
             if (!type) return;
             token.metadata = type;
         }
 
         return token;
     }
-    export function primitiveColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): Lexer.Token {
+    export function primitiveColFunction(value: Utils.SourceArray, index: number, isCollection?: boolean, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveCollectionFunction);
         if (!token) return;
 
         if (typeof metadataContext === "object") {
-            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection, true, true);
+            let type = NameOrIdentifier.getOperationType("function", metadataContext, token, isCollection ?? false, true, true);
             if (!type) return;
             token.metadata = type;
         }
@@ -659,8 +664,8 @@ export namespace NameOrIdentifier {
         for (let i = 0; i < metadataContext.dataServices.schemas.length; i++) {
             let schema = metadataContext.dataServices.schemas[i];
             if (elementType.indexOf(schema.namespace + ".") === 0) {
-                for (let j = 0; j < schema[types].length; j++) {
-                    let it = schema[types][j];
+                for (let j = 0; j < schema[types ?? 0].length; j++) {
+                    let it = schema[types ?? 0][j];
                     if (schema.namespace + "." + it.name === elementType) {
                         type = it;
                         break;
@@ -672,7 +677,7 @@ export namespace NameOrIdentifier {
 
         return type;
     }
-    export function entityFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function entityFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityFunctionImport);
         if (!token) return;
 
@@ -684,7 +689,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function entityColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function entityColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.EntityCollectionFunctionImport);
         if (!token) return;
 
@@ -696,7 +701,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function complexFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function complexFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexFunctionImport);
         if (!token) return;
 
@@ -708,7 +713,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function complexColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function complexColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.ComplexCollectionFunctionImport);
         if (!token) return;
 
@@ -720,7 +725,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function primitiveFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function primitiveFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveFunctionImport);
         if (!token) return;
 
@@ -732,7 +737,7 @@ export namespace NameOrIdentifier {
 
         return token;
     }
-    export function primitiveColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function primitiveColFunctionImport(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = NameOrIdentifier.odataIdentifier(value, index, Lexer.TokenType.PrimitiveCollectionFunctionImport);
         if (!token) return;
 

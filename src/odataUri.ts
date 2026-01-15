@@ -4,9 +4,10 @@ import PrimitiveLiteral from "./primitiveLiteral";
 import Expressions from "./expressions";
 import Query from "./query";
 import ResourcePath from "./resourcePath";
+import { NullableToken } from "./types/nullableToken";
 
 export namespace ODataUri {
-    export function odataUri(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function odataUri(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let resource = ResourcePath.resourcePath(value, index, metadataContext);
         while (!resource && index < value.length) {
             while (value[++index] !== 0x2f && index < value.length);

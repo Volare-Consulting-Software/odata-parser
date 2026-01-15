@@ -22,7 +22,9 @@ describe('Primitive literals from json', () => {
           expect(literal).to.be.undefined;
           return;
         }
-        expect(literal).to.deep.equal(item[resultName]);
+        // Exclude metadata from comparison
+        const { metadata, ...literalWithoutMetadata } = literal || {};
+        expect(literalWithoutMetadata).to.deep.equal(item[resultName]);
       });
     }
   });

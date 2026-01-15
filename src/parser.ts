@@ -1,12 +1,13 @@
-import Lexer from "./lexer";
 import PrimitiveLiteral from "./primitiveLiteral";
 import Expressions from "./expressions";
 import Query from "./query";
 import ResourcePath from "./resourcePath";
 import ODataUri from "./odataUri";
+import Utils from "./utils";
+import { NullableToken } from "./types/nullableToken";
 
-export const parserFactory = function(fn) {
-    return function (source, options) {
+export const parserFactory = function parserFactory(fn: (value: Utils.SourceArray, index: number, metadataContext?: any) => NullableToken) {
+    return function (source: string, options?: any) {
         options = options || {};
         const raw = new Uint16Array(source.length);
         let pos = 0;
@@ -21,17 +22,17 @@ export const parserFactory = function(fn) {
 };
 
 export class Parser {
-    odataUri(source: string, options?: any): Lexer.Token { return parserFactory(ODataUri.odataUri)(source, options); }
-    resourcePath(source: string, options?: any): Lexer.Token { return parserFactory(ResourcePath.resourcePath)(source, options); }
-    query(source: string, options?: any): Lexer.Token { return parserFactory(Query.queryOptions)(source, options); }
-    filter(source: string, options?: any): Lexer.Token { return parserFactory(Expressions.boolCommonExpr)(source, options); }
-    keys(source: string, options?: any): Lexer.Token { return parserFactory(Expressions.keyPredicate)(source, options); }
-    literal(source: string, options?: any): Lexer.Token { return parserFactory(PrimitiveLiteral.primitiveLiteral)(source, options); }
+    odataUri(source: string, options?: any): NullableToken { return parserFactory(ODataUri.odataUri)(source, options); }
+    resourcePath(source: string, options?: any): NullableToken{ return parserFactory(ResourcePath.resourcePath)(source, options); }
+    query(source: string, options?: any): NullableToken { return parserFactory(Query.queryOptions)(source, options); }
+    filter(source: string, options?: any): NullableToken { return parserFactory(Expressions.boolCommonExpr)(source, options); }
+    keys(source: string, options?: any): NullableToken{ return parserFactory(Expressions.keyPredicate)(source, options); }
+    literal(source: string, options?: any): NullableToken { return parserFactory(PrimitiveLiteral.primitiveLiteral)(source, options); }
 }
 
-export function odataUri(source: string, options?: any): Lexer.Token { return parserFactory(ODataUri.odataUri)(source, options); }
-export function resourcePath(source: string, options?: any): Lexer.Token { return parserFactory(ResourcePath.resourcePath)(source, options); }
-export function query(source: string, options?: any): Lexer.Token { return parserFactory(Query.queryOptions)(source, options); }
-export function filter(source: string, options?: any): Lexer.Token { return parserFactory(Expressions.boolCommonExpr)(source, options); }
-export function keys(source: string, options?: any): Lexer.Token { return parserFactory(Expressions.keyPredicate)(source, options); }
-export function literal(source: string, options?: any): Lexer.Token { return parserFactory(PrimitiveLiteral.primitiveLiteral)(source, options); }
+export function odataUri(source: string, options?: any): NullableToken { return parserFactory(ODataUri.odataUri)(source, options); }
+export function resourcePath(source: string, options?: any): NullableToken { return parserFactory(ResourcePath.resourcePath)(source, options); }
+export function query(source: string, options?: any): NullableToken { return parserFactory(Query.queryOptions)(source, options); }
+export function filter(source: string, options?: any): NullableToken { return parserFactory(Expressions.boolCommonExpr)(source, options); }
+export function keys(source: string, options?: any): NullableToken { return parserFactory(Expressions.keyPredicate)(source, options); }
+export function literal(source: string, options?: any): NullableToken { return parserFactory(PrimitiveLiteral.primitiveLiteral)(source, options); }

@@ -3,9 +3,10 @@ import Lexer from "./lexer";
 import PrimitiveLiteral from "./primitiveLiteral";
 import NameOrIdentifier from "./nameOrIdentifier";
 import Expressions from "./expressions";
+import { NullableToken } from "./types/nullableToken";
 
 export namespace ResourcePath {
-    export function resourcePath(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function resourcePath(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         if (value[index] === 0x2f) index++;
         let token = ResourcePath.batch(value, index) ||
             ResourcePath.entity(value, index, metadataContext) ||
@@ -22,7 +23,7 @@ export namespace ResourcePath {
         if (!resource) return;
         let start = index;
         index = resource.next;
-        let navigation: Lexer.Token;
+        let navigation: NullableToken;
 
         switch (resource.type) {
             case Lexer.TokenType.EntitySetName:
@@ -68,11 +69,11 @@ export namespace ResourcePath {
         if (resource) return Lexer.tokenize(value, start, index, { resource, navigation }, Lexer.TokenType.ResourcePath, navigation || <any>{ metadata: metadataContext });
     }
 
-    export function batch(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function batch(value: Utils.SourceArray, index: number): NullableToken {
         if (Utils.equals(value, index, "$batch")) return Lexer.tokenize(value, index, index + 6, "$batch", Lexer.TokenType.Batch);
     }
 
-    export function entity(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function entity(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         if (Utils.equals(value, index, "$entity")) {
             let start = index;
             index += 7;
@@ -88,11 +89,11 @@ export namespace ResourcePath {
         }
     }
 
-    export function metadata(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function metadata(value: Utils.SourceArray, index: number): NullableToken {
         if (Utils.equals(value, index, "$metadata")) return Lexer.tokenize(value, index, index + 9, "$metadata", Lexer.TokenType.Metadata);
     }
 
-    export function collectionNavigation(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function collectionNavigation(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         let name;
         if (value[index] === 0x2f) {
@@ -112,7 +113,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { name, path }, Lexer.TokenType.CollectionNavigation, path || name);
     }
 
-    export function collectionNavigationPath(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function collectionNavigationPath(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         let token = ResourcePath.collectionPath(value, index, metadataContext) ||
             Expressions.refExpr(value, index);
@@ -133,7 +134,7 @@ export namespace ResourcePath {
         }
     }
 
-    export function singleNavigation(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function singleNavigation(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = ResourcePath.boundOperation(value, index, false, metadataContext) ||
             Expressions.refExpr(value, index) ||
             Expressions.valueExpr(value, index);
@@ -161,7 +162,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { name: name, path: token }, Lexer.TokenType.SingleNavigation, token);
     }
 
-    export function propertyPath(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function propertyPath(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token =
             NameOrIdentifier.entityColNavigationProperty(value, index, metadataContext) ||
             NameOrIdentifier.entityNavigationProperty(value, index, metadataContext) ||
@@ -213,17 +214,17 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { path: token, navigation }, Lexer.TokenType.PropertyPath, navigation);
     }
 
-    export function collectionPath(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function collectionPath(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         return Expressions.countExpr(value, index) ||
             ResourcePath.boundOperation(value, index, true, metadataContext);
     }
 
-    export function singlePath(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function singlePath(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         return Expressions.valueExpr(value, index) ||
             ResourcePath.boundOperation(value, index, false, metadataContext);
     }
 
-    export function complexPath(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function complexPath(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         let name, token;
         if (value[index] === 0x2f) {
@@ -242,7 +243,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { name: name, path: token }, Lexer.TokenType.ComplexPath, token);
     }
 
-    export function boundOperation(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundOperation(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         if (value[index] !== 0x2f) return;
         let start = index;
         index++;
@@ -296,7 +297,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { operation, name, navigation }, Lexer.TokenType.BoundOperation, navigation);
     }
 
-    export function boundActionCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundActionCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         let namespaceNext = NameOrIdentifier.namespace(value, index);
         if (namespaceNext === index) return;
         let start = index;
@@ -312,7 +313,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, action.next, action, Lexer.TokenType.BoundActionCall, action);
     }
 
-    export function boundFunctionCall(value: Utils.SourceArray, index: number, odataFunction: Function, tokenType: Lexer.TokenType, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundFunctionCall(value: Utils.SourceArray, index: number, odataFunction: Function, tokenType: Lexer.TokenType, isCollection: boolean, metadataContext?: any): NullableToken {
         let namespaceNext = NameOrIdentifier.namespace(value, index);
         if (namespaceNext === index) return;
         let start = index;
@@ -333,31 +334,31 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { call, params }, tokenType, call);
     }
 
-    export function boundEntityFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundEntityFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         return ResourcePath.boundFunctionCall(value, index, NameOrIdentifier.entityFunction, Lexer.TokenType.BoundEntityFunctionCall, isCollection, metadataContext);
     }
-    export function boundEntityColFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundEntityColFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         return ResourcePath.boundFunctionCall(value, index, NameOrIdentifier.entityColFunction, Lexer.TokenType.BoundEntityCollectionFunctionCall, isCollection, metadataContext);
     }
-    export function boundComplexFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundComplexFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         return ResourcePath.boundFunctionCall(value, index, NameOrIdentifier.complexFunction, Lexer.TokenType.BoundComplexFunctionCall, isCollection, metadataContext);
     }
-    export function boundComplexColFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundComplexColFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         return ResourcePath.boundFunctionCall(value, index, NameOrIdentifier.complexColFunction, Lexer.TokenType.BoundComplexCollectionFunctionCall, isCollection, metadataContext);
     }
-    export function boundPrimitiveFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundPrimitiveFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         return ResourcePath.boundFunctionCall(value, index, NameOrIdentifier.primitiveFunction, Lexer.TokenType.BoundPrimitiveFunctionCall, isCollection, metadataContext);
     }
-    export function boundPrimitiveColFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): Lexer.Token {
+    export function boundPrimitiveColFuncCall(value: Utils.SourceArray, index: number, isCollection: boolean, metadataContext?: any): NullableToken {
         return ResourcePath.boundFunctionCall(value, index, NameOrIdentifier.primitiveColFunction, Lexer.TokenType.BoundPrimitiveCollectionFunctionCall, isCollection, metadataContext);
     }
 
-    export function actionImportCall(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function actionImportCall(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let action = NameOrIdentifier.actionImport(value, index, metadataContext);
         if (action) return Lexer.tokenize(value, index, action.next, action, Lexer.TokenType.ActionImportCall, action);
     }
 
-    export function functionImportCall(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function functionImportCall(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let fnImport = NameOrIdentifier.entityFunctionImport(value, index, metadataContext) ||
             NameOrIdentifier.entityColFunctionImport(value, index, metadataContext) ||
             NameOrIdentifier.complexFunctionImport(value, index, metadataContext) ||
@@ -376,7 +377,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { import: fnImport, params: params.value }, <Lexer.TokenType>(fnImport.type + "Call"), fnImport);
     }
 
-    export function functionParameters(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function functionParameters(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let open = Lexer.OPEN(value, index);
         if (!open) return;
         let start = index;
@@ -403,7 +404,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, params, Lexer.TokenType.FunctionParameters);
     }
 
-    export function functionParameter(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function functionParameter(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let name = Expressions.parameterName(value, index);
         if (!name) return;
         let start = index;
@@ -422,7 +423,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { name, value: token }, Lexer.TokenType.FunctionParameter);
     }
 
-    export function crossjoin(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function crossjoin(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         if (!Utils.equals(value, index, "$crossjoin")) return;
         let start = index;
         index += 10;
@@ -453,7 +454,7 @@ export namespace ResourcePath {
         return Lexer.tokenize(value, start, index, { names }, Lexer.TokenType.Crossjoin);
     }
 
-    export function all(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function all(value: Utils.SourceArray, index: number): NullableToken {
         if (Utils.equals(value, index, "$all")) return Lexer.tokenize(value, index, index + 4, "$all", Lexer.TokenType.AllResource);
     }
 }

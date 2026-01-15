@@ -3,9 +3,12 @@ import Lexer from "./lexer";
 import PrimitiveLiteral from "./primitiveLiteral";
 import NameOrIdentifier from "./nameOrIdentifier";
 import Expressions from "./expressions";
+import { NullableToken } from "./types/nullableToken";
+import { BaseType } from "typescript";
+import { TokenType } from "./types/tokenType";
 
 export namespace Query {
-    export function queryOptions(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function queryOptions(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let token = Query.queryOption(value, index, metadataContext);
         if (!token) return;
         let start = index;
@@ -26,13 +29,13 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, { options }, Lexer.TokenType.QueryOptions);
     }
 
-    export function queryOption(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function queryOption(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         return Query.systemQueryOption(value, index, metadataContext) ||
             Query.aliasAndValue(value, index) ||
             Query.customQueryOption(value, index);
     }
 
-    export function systemQueryOption(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function systemQueryOption(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         return Query.expand(value, index, metadataContext) ||
             Query.filter(value, index) ||
             Query.format(value, index) ||
@@ -46,7 +49,7 @@ export namespace Query {
             Query.top(value, index);
     }
 
-    export function customQueryOption(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function customQueryOption(value: Utils.SourceArray, index: number): NullableToken {
       let key = NameOrIdentifier.odataIdentifier(value, index);
       if (!key) return;
       let start = index;
@@ -62,7 +65,7 @@ export namespace Query {
       return Lexer.tokenize(value, start, index, { key: key.raw, value: Utils.stringify(value, eq, index) }, Lexer.TokenType.CustomQueryOption);
     }
 
-    export function id(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function id(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24id")) {
             index += 5;
@@ -81,7 +84,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, Utils.stringify(value, eq, index), Lexer.TokenType.Id);
     }
 
-    export function expand(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function expand(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24expand")) {
             index += 9;
@@ -114,7 +117,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Expand);
     }
 
-    export function expandItem(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function expandItem(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         let star = Lexer.STAR(value, index);
         if (star) {
@@ -243,12 +246,12 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, tokenValue, Lexer.TokenType.ExpandItem);
     }
 
-    export function expandCountOption(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function expandCountOption(value: Utils.SourceArray, index: number): NullableToken {
         return Query.filter(value, index) ||
             Query.search(value, index);
     }
 
-    export function expandRefOption(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function expandRefOption(value: Utils.SourceArray, index: number): NullableToken {
         return Query.expandCountOption(value, index) ||
             Query.orderby(value, index) ||
             Query.skip(value, index) ||
@@ -256,14 +259,14 @@ export namespace Query {
             Query.inlinecount(value, index);
     }
 
-    export function expandOption(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function expandOption(value: Utils.SourceArray, index: number): NullableToken {
         return Query.expandRefOption(value, index) ||
             Query.select(value, index) ||
             Query.expand(value, index) ||
             Query.levels(value, index);
     }
 
-    export function expandPath(value: Utils.SourceArray, index: number, metadataContext?: any): Lexer.Token {
+    export function expandPath(value: Utils.SourceArray, index: number, metadataContext?: any): NullableToken {
         let start = index;
         let path = [];
 
@@ -322,7 +325,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, path, Lexer.TokenType.ExpandPath);
     }
 
-    export function search(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function search(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24search")) {
             index += 9;
@@ -342,7 +345,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.Search);
     }
 
-    export function searchExpr(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchExpr(value: Utils.SourceArray, index: number): NullableToken {
         let token = Query.searchParenExpr(value, index) ||
             Query.searchTerm(value, index);
 
@@ -376,13 +379,13 @@ export namespace Query {
         return token;
     }
 
-    export function searchTerm(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchTerm(value: Utils.SourceArray, index: number): NullableToken {
         return Query.searchNotExpr(value, index) ||
             Query.searchPhrase(value, index) ||
             Query.searchWord(value, index);
     }
 
-    export function searchNotExpr(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchNotExpr(value: Utils.SourceArray, index: number): NullableToken {
         let rws = Lexer.RWS(value, index);
         if (!Utils.equals(value, rws, "NOT")) return;
         let start = index;
@@ -398,7 +401,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.SearchNotExpression);
     }
 
-    export function searchOrExpr(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchOrExpr(value: Utils.SourceArray, index: number): NullableToken {
         let rws = Lexer.RWS(value, index);
         if (rws === index || !Utils.equals(value, rws, "OR")) return;
         let start = index;
@@ -413,7 +416,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, token, Lexer.TokenType.SearchOrExpression);
     }
 
-    export function searchAndExpr(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchAndExpr(value: Utils.SourceArray, index: number): NullableToken {
         let rws = Lexer.RWS(value, index);
         if (rws === index || !Utils.equals(value, rws, "AND")) return;
         let start = index;
@@ -428,7 +431,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, token, Lexer.TokenType.SearchAndExpression);
     }
 
-    export function searchPhrase(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchPhrase(value: Utils.SourceArray, index: number): NullableToken {
         let mark = Lexer.quotationMark(value, index);
         if (mark === index) return;
         let start = index;
@@ -449,7 +452,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, Utils.stringify(value, valueStart, valueEnd), Lexer.TokenType.SearchPhrase);
     }
 
-    export function searchWord(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchWord(value: Utils.SourceArray, index: number): NullableToken {
         let next = Utils.required(value, index, Lexer.ALPHA, 1);
         if (!next) return;
         let start = index;
@@ -460,7 +463,7 @@ export namespace Query {
         return token;
     }
 
-    export function searchParenExpr(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function searchParenExpr(value: Utils.SourceArray, index: number): NullableToken {
         let open = Lexer.OPEN(value, index);
         if (!open) return;
         let start = index;
@@ -479,7 +482,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.SearchParenExpression);
     }
 
-    export function levels(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function levels(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24levels")) {
             index += 9;
@@ -506,7 +509,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, level, Lexer.TokenType.Levels);
     }
 
-    export function filter(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function filter(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24filter")) {
             index += 9;
@@ -526,7 +529,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, expr, Lexer.TokenType.Filter);
     }
 
-    export function orderby(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function orderby(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24orderby")) {
             index += 10;
@@ -559,7 +562,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.OrderBy);
     }
 
-    export function orderbyItem(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function orderbyItem(value: Utils.SourceArray, index: number): NullableToken {
         let expr = Expressions.commonExpr(value, index);
         if (!expr) return;
         let start = index;
@@ -579,7 +582,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, { expr, direction }, Lexer.TokenType.OrderByItem);
     }
 
-    export function skip(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function skip(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24skip")) {
             index += 7;
@@ -599,7 +602,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, token, Lexer.TokenType.Skip);
     }
 
-    export function top(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function top(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24top")) {
             index += 6;
@@ -619,7 +622,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, token, Lexer.TokenType.Top);
     }
 
-    export function format(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function format(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24format")) {
             index += 9;
@@ -647,7 +650,7 @@ export namespace Query {
         if (format) return Lexer.tokenize(value, start, index, { format }, Lexer.TokenType.Format);
     }
 
-    export function inlinecount(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function inlinecount(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24count")) {
             index += 8;
@@ -667,7 +670,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, token, Lexer.TokenType.InlineCount);
     }
 
-    export function select(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function select(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24select")) {
             index += 9;
@@ -698,7 +701,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, { items }, Lexer.TokenType.Select);
     }
 
-    export function selectItem(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function selectItem(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         let item;
         let op = Query.allOperationsInSchema(value, index);
@@ -710,7 +713,7 @@ export namespace Query {
             item = { value: "*" };
             index = star;
         } else {
-            item = {};
+            item = {} as TokenType;
             let name = NameOrIdentifier.qualifiedEntityTypeName(value, index) ||
                 NameOrIdentifier.qualifiedComplexTypeName(value, index);
 
@@ -739,7 +742,7 @@ export namespace Query {
         return index;
     }
 
-    export function selectProperty(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function selectProperty(value: Utils.SourceArray, index: number): NullableToken {
         let token = Query.selectPath(value, index) ||
             NameOrIdentifier.primitiveProperty(value, index) ||
             NameOrIdentifier.primitiveColProperty(value, index) ||
@@ -764,7 +767,7 @@ export namespace Query {
         return token;
     }
 
-    export function selectPath(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function selectPath(value: Utils.SourceArray, index: number): NullableToken {
         let token = NameOrIdentifier.complexProperty(value, index) ||
             NameOrIdentifier.complexColProperty(value, index);
 
@@ -784,7 +787,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, tokenValue, Lexer.TokenType.SelectPath);
     }
 
-    export function qualifiedActionName(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function qualifiedActionName(value: Utils.SourceArray, index: number): NullableToken {
         let namespaceNext = NameOrIdentifier.namespace(value, index);
         if (namespaceNext === index || value[namespaceNext] !== 0x2e) return;
         let start = index;
@@ -797,7 +800,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, action.next, action, Lexer.TokenType.Action);
     }
 
-    export function qualifiedFunctionName(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function qualifiedFunctionName(value: Utils.SourceArray, index: number): NullableToken {
         let namespaceNext = NameOrIdentifier.namespace(value, index);
         if (namespaceNext === index || value[namespaceNext] !== 0x2e) return;
         let start = index;
@@ -836,7 +839,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, tokenValue, Lexer.TokenType.Function);
     }
 
-    export function skiptoken(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function skiptoken(value: Utils.SourceArray, index: number): NullableToken {
         let start = index;
         if (Utils.equals(value, index, "%24skiptoken")) {
             index += 12;
@@ -861,7 +864,7 @@ export namespace Query {
         return Lexer.tokenize(value, start, index, Utils.stringify(value, valueStart, index), Lexer.TokenType.SkipToken);
     }
 
-    export function aliasAndValue(value: Utils.SourceArray, index: number): Lexer.Token {
+    export function aliasAndValue(value: Utils.SourceArray, index: number): NullableToken {
         let alias = Expressions.parameterAlias(value, index);
         if (!alias) return;
         let start = index;

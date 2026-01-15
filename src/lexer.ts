@@ -173,7 +173,7 @@ export class Token {
     type: TokenType;
     raw: string;
     metadata: any;
-    constructor(token) {
+    constructor(token: Token) {
         this.position = token.position;
         this.next = token.next;
         this.value = token.value;
@@ -207,7 +207,7 @@ export namespace Lexer {
         return token;
     }
 
-    export function clone(token): Token {
+    export function clone(token: Token): Token {
         return new exports.Token({
             position: token.position,
             next: token.next,
@@ -228,9 +228,10 @@ export namespace Lexer {
     export function VCHAR(value: number): boolean { return value >= 0x21 && value <= 0x7e; }
 
     // punctuation
-    export function whitespaceLength(value, index) {
+    export function whitespaceLength(value: Utils.SourceArray, index: number): number {
         if (Utils.equals(value, index, "%20") || Utils.equals(value, index, "%09")) return 3;
         else if (Lexer.SP(value[index]) || Lexer.HTAB(value[index]) || value[index] === 0x20 || value[index] === 0x09) return 1;
+        return 0;
     }
 
     export function OWS(value: Utils.SourceArray, index: number): number {
@@ -252,41 +253,51 @@ export namespace Lexer {
     export function AT(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x40) return index + 1;
         else if (Utils.equals(value, index, "%40")) return index + 3;
+        return 0;
     }
     export function COLON(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x3a) return index + 1;
         else if (Utils.equals(value, index, "%3A")) return index + 3;
+        return 0;
     }
     export function COMMA(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x2c) return index + 1;
         else if (Utils.equals(value, index, "%2C")) return index + 3;
+        return 0;
     }
     export function EQ(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x3d) return index + 1;
+        return 0;
     }
     export function SIGN(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x2b || value[index] === 0x2d) return index + 1;
         else if (Utils.equals(value, index, "%2B")) return index + 3;
+        return 0;
     }
     export function SEMI(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x3b) return index + 1;
         else if (Utils.equals(value, index, "%3B")) return index + 3;
+        return 0;
     }
     export function STAR(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x2a) return index + 1;
         else if (Utils.equals(value, index, "%2A")) return index + 3;
+        return 0;
     }
     export function SQUOTE(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x27) return index + 1;
         else if (Utils.equals(value, index, "%27")) return index + 3;
+        return 0;
     }
     export function OPEN(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x28) return index + 1;
         else if (Utils.equals(value, index, "%28")) return index + 3;
+        return 0;
     }
     export function CLOSE(value: Utils.SourceArray, index: number): number {
         if (value[index] === 0x29) return index + 1;
         else if (Utils.equals(value, index, "%29")) return index + 3;
+        return 0;
     }
     // unreserved ALPHA / DIGIT / "-" / "." / "_" / "~"
     export function unreserved(value: number): boolean { return Lexer.ALPHA(value) || Lexer.DIGIT(value) || value === 0x2d || value === 0x2e || value === 0x5f || value === 0x7e; }
