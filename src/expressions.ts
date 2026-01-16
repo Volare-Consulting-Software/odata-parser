@@ -4,10 +4,12 @@ import PrimitiveLiteral from "./primitiveLiteral";
 import NameOrIdentifier from "./nameOrIdentifier";
 import ArrayOrObject from "./json";
 import { NullableToken } from "./types/nullableToken";
+import { isPropertyName, visitLexicalEnvironment } from "typescript";
 
 export namespace Expressions {
     export function commonExpr(value: Utils.SourceArray, index: number): NullableToken {
         let token = PrimitiveLiteral.primitiveLiteral(value, index) ||
+            customFunctionExpr(value, index) ||
             parameterAlias(value, index) ||
             ArrayOrObject.arrayOrObject(value, index) ||
             rootExpr(value, index) ||
@@ -805,6 +807,83 @@ export namespace Expressions {
             next: nav
         }, Lexer.TokenType.RootExpression);
     }
+
+    export function customFunctionParmExpr(value: Utils.SourceArray, index: number): NullableToken {
+        let name = parameterName(value, index);
+
+        if(!name){
+            name = PrimitiveLiteral.primitiveLiteral(value, index);
+        }
+
+        if (!name) return;
+
+        return Lexer.tokenize(value, index, name.next, {
+            name: name,
+            value: name,
+        }, Lexer.TokenType.CustomFunctionParameter);
+        
+    }
+
+    export function customFunctionParamsExpr(value: Utils.SourceArray, index: number): NullableToken {
+        let open = Lexer.OPEN(value, index);
+        if (!open) return;
+        let start = index;
+        index = open;
+
+        let params = [];
+        let expr = customFunctionParmExpr(value, index);
+        while (expr) {
+            params.push(expr);
+            let comma = Lexer.COMMA(value, expr.next);
+            if (comma) {
+                index = Math.max(comma);
+                expr = customFunctionParmExpr(value, index);
+                if(!expr){
+                    let space = Lexer.whitespaceLength(value, comma);
+                    if (!space) return;
+                    index = comma + space;
+                    expr = customFunctionParmExpr(value, index);
+                }
+                if (!expr) return;
+            } else {
+                index = expr.next;
+                expr = undefined;
+            }
+        }
+
+        let close = Lexer.CLOSE(value, index);
+        if (!close) return;
+        index = close;
+
+        return Lexer.tokenize(value, start, index, params, Lexer.TokenType.CustomeFunctionParameters);   
+    }
+export function customFunctionExpr(value: Utils.SourceArray, index: number): NullableToken {
+    const start = index;
+
+    // Get the raw function call string
+    const raw = Utils.stringify(value, start, value.length);
+    
+    // First try to parse an identifier
+    const token = NameOrIdentifier.odataIdentifier(value, index);
+    if (!token) return;
+
+    // For safety, check if this is a known OData function
+    const funcName = token.value.name.toLowerCase();
+    const knownFunctions = [
+        'contains', 'startswith', 'endswith', 'length', 'indexof', 'substring',
+        'tolower', 'toupper', 'trim', 'concat', 'year', 'month', 'day', 'hour',
+        'minute', 'second', 'round', 'floor', 'ceiling', 'now', 'isof', 'cast',
+        'all', 'any', 'filter'
+    ];
+    if (knownFunctions.includes(funcName)) {
+        return;
+    }
+
+    const params = customFunctionParamsExpr(value, token.next);
+    if (!params) return;
+    
+    return Lexer.tokenize(value, start, params.next, params, Lexer.TokenType.CustomFunctionCall);   
+}
 }
 
 export default Expressions;

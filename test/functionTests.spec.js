@@ -3,6 +3,22 @@ const { PrimitiveLiteral } = require('../lib/primitiveLiteral');
 const { Expressions } = require('../lib/expressions'); 
 const cases = require('./function-test-cases');
 
+// Helper function to recursively remove metadata from an object
+function removeMetadata(obj) {
+  if (Array.isArray(obj)) {
+    return obj.map(item => removeMetadata(item));
+  } else if (obj && typeof obj === 'object') {
+    const result = {};
+    for (const key in obj) {
+      if (key !== 'metadata') {
+        result[key] = removeMetadata(obj[key]);
+      }
+    }
+    return result;
+  }
+  return obj;
+}
+
 describe('Function tests from json', () => {
   cases.forEach(function(item, index, array) {
     const title = '#' + index + ' should parse ' + item['-Name'] + ': ' + item.Input;
@@ -34,9 +50,9 @@ describe('Function tests from json', () => {
           expect(functionToCall).to.be.undefined;
           return;
         }
-        // Exclude metadata from comparison
-        const { metadata, ...literalWithoutMetadata } = functionToCall || {};
-        expect(literalWithoutMetadata).to.deep.equal(item[resultName]);
+        // Remove all metadata from the result before comparison
+        const resultWithoutMetadata = removeMetadata(functionToCall);
+        expect(resultWithoutMetadata).to.deep.equal(removeMetadata(item[resultName]));
       });
     }
   });

@@ -160,7 +160,10 @@ export enum TokenType {
     ODataUri = "ODataUri",
     Batch = "Batch",
     Entity = "Entity",
-    Metadata = "Metadata"
+    Metadata = "Metadata",
+    CustomFunctionCall = "CustomFunctionCall",
+    CustomeFunctionParameters="CustomFunctionParameters",
+    CustomFunctionParameter = "CustomFunctionParameter"
 }
 
 export const LexerTokenType = TokenType;

@@ -884,5 +884,100 @@
       "type": "Literal",
       "value": "Edm.GeometryPolygon"
     }
+  },
+{
+  "-Name": "Custom Function",
+  "-Rule": "commonExpr",
+  "Input": "myCustomFunction(param1, 42, 'test')",
+  "result": {
+  "raw": "myCustomFunction(param1, 42, 'test')",
+  "position": 0,
+  "next": 36,
+  "type": "CommonExpression",
+  "value": {
+    "next": 36,
+    "position": 0,
+    "raw": "myCustomFunction(param1, 42, 'test')",
+    "type": "CustomFunctionCall",
+    "value": {
+      "next": 36,
+      "position": 16,
+      "raw": "(param1, 42, 'test')",
+      "type": "CustomFunctionParameters",
+      "value": [
+        {
+          "next": 23,
+          "position": 17,
+          "raw": "param1",
+          "type": "CustomFunctionParameter",
+          "value": {
+            "name": {
+              "next": 23,
+              "position": 17,
+              "raw": "param1",
+              "type": "ParameterName",
+              "value": {
+                "name": "param1"
+              }
+            },
+            "value": {
+              "next": 23,
+              "position": 17,
+              "raw": "param1",
+              "type": "ParameterName",
+              "value": {
+                "name": "param1"
+              }
+            }
+          }
+        },
+        {
+          "next": 27,
+          "position": 25,
+          "raw": "42",
+          "type": "CustomFunctionParameter",
+          "value": {
+            "name": {
+              "next": 27,
+              "position": 25,
+              "raw": "42",
+              "type": "Literal",
+              "value": "Edm.SByte"
+            },
+            "value": {
+              "next": 27,
+              "position": 25,
+              "raw": "42",
+              "type": "Literal",
+              "value": "Edm.SByte"
+            }
+          }
+        },
+        {
+          "next": 35,
+          "position": 29,
+          "raw": "'test'",
+          "type": "CustomFunctionParameter",
+          "value": {
+            "name": {
+              "next": 35,
+              "position": 29,
+              "raw": "'test'",
+              "type": "Literal",
+              "value": "Edm.String"
+            },
+            "value": {
+              "next": 35,
+              "position": 29,
+              "raw": "'test'",
+              "type": "Literal",
+              "value": "Edm.String"
+            }
+          }
+        }
+      ]
+    }
+  }
+}
   }
 ]
