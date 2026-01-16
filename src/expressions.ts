@@ -34,9 +34,9 @@ export namespace Expressions {
             token.next = expr.value.next;
             token.type = expr.type;
             token.raw = Utils.stringify(value, token.position, token.next);
+        }
 
-    if (token) return Lexer.tokenize(value, token.position, token.next, token, Lexer.TokenType.CommonExpression);
-}
+        if (token) return Lexer.tokenize(value, token.position, token.next, token, Lexer.TokenType.CommonExpression);
     }
 
     export function boolCommonExpr(value: Utils.SourceArray, index: number): NullableToken {
